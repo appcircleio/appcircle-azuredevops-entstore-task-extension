@@ -1,0 +1,19 @@
+{
+  "name": "appcircle-enterprise-appstore-task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "azure-pipelines-task-lib": "^4.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.12.11",
+    "@types/q": "^1.5.8"
+  }
+}

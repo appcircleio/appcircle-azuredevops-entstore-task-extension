@@ -1,0 +1,19 @@
+{
+  "name": "appcircle-azuredevops-entstore-task-extension",
+  "version": "0.0.1",
+  "description": "azure task extension for appcircle enterprise app store publish",
+  "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/appcircleio/appcircle-azuredevops-entstore-task-extension"
+  },
+  "author": "appcircle",
+  "contributors": [],
+  "scripts": {
+    "test": ""
+  },
+  "dependencies": {
+    "azure-devops-extension-sdk": "^4.0.2"
+  }
+}

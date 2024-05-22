@@ -1,0 +1,55 @@
+{
+  "manifestVersion": 1,
+  "id": "enterprise-app-store",
+  "name": "Enterprise App Store",
+  "version": "0.0.22",
+  "publisher": "Appcircle",
+  "public": false,
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "tags": [
+    "app store",
+    "google play",
+    "Beta Distribution",
+    "Mobile",
+    "iOS",
+    "Android",
+    "IPA",
+    "APK/AAB"
+  ],
+  "description": "Appcircle Test Distribution allows you to distribute your mobile apps to your test groups",
+  "categories": ["Azure Pipelines"],
+  "icons": {
+    "default": "images/extension-icon.png"
+  },
+  "files": [
+    {
+      "path": "task"
+    },
+    {
+      "path": "images",
+      "addressable": true
+    }
+  ],
+  "content": {
+    "details": {
+      "path": "README.md"
+    },
+    "license": {
+      "path": "LICENSE"
+    }
+  },
+  "contributions": [
+    {
+      "id": "custom-build-release-task",
+      "type": "ms.vss-distributed-task.task",
+      "targets": ["ms.vss-distributed-task.tasks"],
+      "properties": {
+        "name": "task"
+      }
+    }
+  ]
+}
