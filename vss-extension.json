@@ -2,9 +2,9 @@
   "manifestVersion": 1,
   "id": "enterprise-app-store",
   "name": "Enterprise App Store",
-  "version": "0.0.22",
+  "version": "0.0.29",
   "publisher": "Appcircle",
-  "public": false,
+  "public": true,
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"

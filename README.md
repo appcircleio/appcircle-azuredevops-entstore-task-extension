@@ -1,32 +1,51 @@
 ## Appcircle Enterprise App Store
 
-Appcircle Enterprise Mobile App Store is your own mobile app store to provide access to in-house apps with a customizable mobile storefront.
+Appcircle Enterprise Mobile App Store is your own mobile app store for providing access to in-house apps with a customizable mobile storefront.
 
-- Appcircle Enterprise App Store provides an app store to distribute your in-house apps with a customizable mobile storefront.
+- **Customizable Storefront:** Distribute your in-house apps with a fully customizable mobile storefront.
+- **Secure Distribution:** Everything you need for secure, streamlined distribution of your in-house apps.
+- **No MDM Required:** Allows distribution of B2B and B2E applications without the need for an MDM solution and enrollment.
 
-- Everything you need for secure distribution of your in-house apps in a streamlined manner.
-
-- It allows distribution of B2B and B2E applications without the need for an MDM solution and enrollment.
-
-Learn more about [Appcircle Enterprise App Store](https://appcircle.io/enterprise-app-store)
+Learn more about [Appcircle Enterprise App Store](https://appcircle.io/enterprise-app-store?&utm_source=azure&utm_medium=product&utm_campaign=enterprise_app_store).
 
 ## What Sets Apart Appcircle Enterprise Mobile App Store
 
-The Appcircle Enterprise Mobile App Store lets users share their .IPA, APK, or AAB files with others, skipping the need to use App Store TestFlight or Google Play Internal Testing. One of its benefits is that you don’t need to increase the app’s build number just to send it for testing. Most importantly, this feature offers two ways to share your app: marking it as ‘beta’ or Live. This means you can share any bugs or new features without affecting the development lifecyle. Moreover, Appcircle ensures extra secure authentication using a username and password for accessing the Enterprise Mobile App Store
+1. **Direct File Sharing:**
+   - **Skip Traditional Stores:** Share .IPA, APK, or AAB files directly, avoiding the need to wait for Apple App Store or Google Play approvals.
+2. **Flexible Sharing Options:**
+   - **Beta and Live Modes:** Share your app in ‘beta’ mode for testing new features or identifying bugs, or in ‘live’ mode for stable versions. This flexibility helps maintain the development lifecycle without interruptions.
+3. **Enhanced Security:**
+   - **Secure Authentication:** Access the Enterprise Mobile App Store with extra secure authentication using Enterprise Authentication Methods.
+   - **Controlled Access:** Ensure that only authorized users can access the app store and its contents.
+4. **Customizable Mobile Storefront:**
+   - **Tailored Experience:** Provide a customizable mobile storefront for your in-house apps, ensuring a tailored experience that aligns with your brand and user needs.
+5. **No MDM Requirement:**
+   - **Simplified Distribution:** Distribute B2B and B2E applications without the need for a Mobile Device Management (MDM) solution or enrollment, reducing complexity and costs.
+6. **Streamlined Workflow:**
+   - **Seamless Integration:** Integrates smoothly with your existing workflow, making it easy to manage and distribute apps within your organization.
+   - **Efficient Management:** Track and manage applications, versions, testers, and teams effectively, ensuring a smooth distribution process.
+
+These features make the Appcircle Enterprise Mobile App Store a powerful tool for securely and efficiently distributing in-house applications, offering flexibility, enhanced security, and a streamlined workflow.
 
 ![Enterprise App Store Dashboard](images/ent_app_store.png)
 
 ### Generating/Managing the Personal API Tokens
 
-To generate a Personal API Token, go to the My Organization screen on second option at the bottom left.You'll find the Personal API Token section in the top right corner.
+To generate a Personal API Token:
 
-Press the "Generate Token" button to generate your first token.
+1. Go to the My Organization screen (second option at the bottom left).
+2. Find the Personal API Token section in the top right corner.
+3. Press the "Generate Token" button to generate your first token.
 
 ![Token Generation](images/PAT.png)
 
 ## How to use Appcircle Enterprise Mobile App Store Extension
 
-Go to your pipelien and search for "Appcircle Enterprise Store" and provide required informations such as Appcircle Access Token and then hit the add button to publish your app. After fulfulling the inputs you should be seeing similiar in your pipeline file
+### tension
+
+1. Go to your pipeline and search for "Appcircle Enterprise Store."
+2. Provide the required information, such as the Appcircle Access Token, and hit the add button to publish your app.
+3. After entering the inputs, your pipeline file should look similar to this:
 
 ```yaml
 - task: AppcircleEnterpriseStore@0
@@ -41,8 +60,10 @@ Go to your pipelien and search for "Appcircle Enterprise Store" and provide requ
 
 ### Leveraging Environment Variables
 
-Utilize environment variables seamlessly by substituting the parameters with `$(VARIABLE_NAME)` in your task inputs. The extension automatically retrieves values from the specified environment variables within your pipeline.
+Utilize environment variables seamlessly by substituting the parameters with $(VARIABLE_NAME) in your task inputs. The extension automatically retrieves values from the specified environment variables within your pipeline.
+
+If you would like to learn more about this extension and how to utilize it in your projects, please [contact us](https://appcircle.io/contact?&utm_source=azure&utm_medium=product&utm_campaign=enterprise_app_store)
 
 ### Reference
 
-- For details about the module, visit [Appcircle Enterprise App Store](https://appcircle.io/enterprise-app-store)
+For more detailed instructions and support, visit the [Appcircle Enterprise App Store documentation](https://appcircle.io/enterprise-app-store?&utm_source=azure&utm_medium=product&utm_campaign=enterprise_app_store).
