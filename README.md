@@ -44,13 +44,13 @@ To generate a Personal API Token:
 ### tension
 
 1. Go to your pipeline and search for "Appcircle Enterprise Store."
-2. Provide the required information, such as the Appcircle Access Token, and hit the add button to publish your app.
+2. Provide the required information, such as the Appcircle Personal API Token, and hit the add button to publish your app.
 3. After entering the inputs, your pipeline file should look similar to this:
 
 ```yaml
 - task: AppcircleEnterpriseStore@0
   inputs:
-    accessToken: "YOUR_PAT" # Your Appcircle Access Token
+    accessToken: "YOUR_PAT" # Your Appcircle Personal API Token
     entProfileId: "PROFILE_ID" # ID of your Appcircle Enterprise Mobile App Store Profile
     appPath: "APK_PATH" # Path to your iOS .ipa, or Android APK
     summary: "Summary Notes" # Summary Notes about the version of your app

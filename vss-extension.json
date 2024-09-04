@@ -20,7 +20,7 @@
     "IPA",
     "APK/AAB"
   ],
-  "description": "Appcircle Test Distribution allows you to distribute your mobile apps to your test groups",
+  "description": "Appcircle Enterprise Mobile App Store is your own mobile app store for providing access to in-house apps with a customizable mobile storefront.",
   "categories": ["Azure Pipelines"],
   "icons": {
     "default": "images/extension-icon.png"
