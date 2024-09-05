@@ -1,145 +1,249 @@
 import * as tl from "azure-pipelines-task-lib/task";
-import { exec, execSync } from "child_process";
-
-const publishTypeValues: {
-  readonly None: 0;
-  readonly Beta: 1;
-  readonly Live: 2;
-} = {
-  None: 0,
-  Beta: 1,
-  Live: 2,
-};
+import axios, { AxiosRequestConfig } from "axios";
+import * as fs from "fs";
+import * as FormData from "form-data";
 
 async function run() {
   try {
-    const accessToken = tl.getInputRequired("accessToken");
-    const entProfileId = tl.getInputRequired("entProfileId");
+    const personalAPIToken = tl.getInputRequired("personalAPIToken");
     const appPath = tl.getInputRequired("appPath");
     const summary = tl.getInputRequired("summary");
     const releaseNotes = tl.getInputRequired("releaseNotes");
-    const publishType = tl.getInputRequired("publishType");
-    const inputs = {
-      accessToken: isVariableName(accessToken)
-        ? tl.getVariable(accessToken)
-        : accessToken,
-      entProfileId: isVariableName(entProfileId)
-        ? tl.getVariable(entProfileId)
-        : entProfileId,
-      appPath: isVariableName(appPath) ? tl.getVariable(appPath) : appPath,
-      summary: isVariableName(summary) ? tl.getVariable(summary) : summary,
-      releaseNotes: isVariableName(releaseNotes)
-        ? tl.getVariable(releaseNotes)
-        : releaseNotes,
-      publishType:
-        publishTypeValues[publishType as keyof typeof publishTypeValues],
-    };
+    const _publishType = tl.getInputRequired("publishType");
+    var publishType = "0";
 
-    installACNpmPackage(() => {
-      appcircleLogin(inputs.accessToken, () => {
-        uploadForProfile(inputs.entProfileId!, inputs.appPath!, () => {
-          getStoreVersionList(inputs.entProfileId!, (appVersionId) => {
-            publishToAppStore(
-              inputs.entProfileId!,
-              appVersionId,
-              inputs.summary!,
-              inputs.releaseNotes!,
-              inputs.publishType!,
-              () => {
-                tl.setResult(
-                  tl.TaskResult.Succeeded,
-                  "App published successfully"
-                );
-              }
-            );
-          });
-        });
+    const validExtensions = [".apk", ".ipa"];
+    const fileExtension = appPath.slice(appPath.lastIndexOf(".")).toLowerCase();
+    if (!validExtensions.includes(fileExtension)) {
+      tl.setResult(
+        tl.TaskResult.Failed,
+        `Invalid file extension: ${appPath}. For Android, use .apk. For iOS, use .ipa.`
+      );
+      return;
+    }
+
+    if (
+      _publishType !== "None" &&
+      _publishType !== "Beta" &&
+      _publishType !== "Live"
+    ) {
+      tl.setResult(
+        tl.TaskResult.Failed,
+        `Invalid publish type: ${_publishType}. Please use "None", "Beta" or "Live".`
+      );
+      return;
+    }
+
+    switch (_publishType) {
+      case "None":
+        publishType = "0";
+        break;
+      case "Beta":
+        publishType = "1";
+        break;
+      case "Live":
+        publishType = "2";
+        break;
+      default:
+        break;
+    }
+
+    const loginResponse = await getToken(personalAPIToken);
+    UploadServiceHeaders.token = loginResponse.access_token;
+    console.log("Logged in to Appcircle successfully");
+
+    const uploadResponse = await uploadEnterpriseApp(appPath);
+    const status = await checkTaskStatus(uploadResponse.taskId);
+
+    if (!status) {
+      tl.setResult(
+        tl.TaskResult.Failed,
+        `${uploadResponse.taskId} id upload request failed with status Cancelled`
+      );
+      return;
+    }
+
+    if (publishType !== "0") {
+      const profileId = await getProfileId();
+      const appVersions = await getEnterpriseAppVersions({
+        entProfileId: profileId,
       });
-    });
+      const entVersionId = appVersions[0].id;
+      await publishEnterpriseAppVersion({
+        entProfileId: profileId,
+        entVersionId: entVersionId,
+        summary,
+        releaseNotes,
+        publishType,
+      });
+    }
 
-    tl.setResult(tl.TaskResult.Succeeded, "Artifact Published Successfully!");
+    console.log(
+      `${appPath} uploaded to the Appcircle Enterprise App Store successfully`
+    );
+
+    tl.setResult(
+      tl.TaskResult.Succeeded,
+      `${appPath} uploaded to the Appcircle Enterprise App Store successfully`
+    );
   } catch (err: any) {
+    console.log(err);
     tl.setResult(tl.TaskResult.Failed, err.message);
   }
 }
 
 run();
 
-function installACNpmPackage(callback: () => void) {
-  exec("npm install -g @appcircle/cli", (error) => {
-    if (error) {
-      tl.setResult(tl.TaskResult.Failed, error.message);
-      return;
+/* API */
+
+export async function getToken(pat: string): Promise<any> {
+  const params = new URLSearchParams();
+  params.append("pat", pat);
+
+  try {
+    const response = await axios.post(
+      "https://auth.appcircle.io/auth/v1/token",
+      params.toString(),
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", error.message);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+    } else {
+      console.error("Unexpected error:", error);
     }
-
-    callback();
-  });
+    throw error;
+  }
 }
 
-function appcircleLogin(accessToken: string | undefined, callback: () => void) {
-  exec(`appcircle login --pat=${accessToken}`, (error) => {
-    if (error) {
-      tl.setResult(tl.TaskResult.Failed, error.message);
-      return;
+export class UploadServiceHeaders {
+  static token = "";
+
+  static getHeaders = (): AxiosRequestConfig["headers"] => {
+    let response: AxiosRequestConfig["headers"] = {
+      accept: "application/json",
+      "User-Agent": "Appcircle Github Action",
+    };
+
+    response.Authorization = `Bearer ${UploadServiceHeaders.token}`;
+
+    return response;
+  };
+}
+
+const API_HOSTNAME = "https://api.appcircle.io";
+export const appcircleApi = axios.create({
+  baseURL: API_HOSTNAME.endsWith("/") ? API_HOSTNAME : `${API_HOSTNAME}/`,
+});
+export async function getEnterpriseProfiles() {
+  const buildProfiles = await appcircleApi.get(`store/v2/profiles`, {
+    headers: UploadServiceHeaders.getHeaders(),
+  });
+  return buildProfiles.data;
+}
+
+export async function uploadEnterpriseApp(app: string) {
+  // @ts-ignore
+  const data = new FormData();
+  data.append("File", fs.createReadStream(app));
+  const uploadResponse = await appcircleApi.post(
+    `store/v2/profiles/app-versions`,
+    data,
+    {
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: {
+        ...UploadServiceHeaders.getHeaders(),
+        ...data.getHeaders(),
+        "Content-Type": "multipart/form-data;boundary=" + data.getBoundary(),
+      },
     }
+  );
+  return uploadResponse.data;
+}
 
-    callback();
+export async function publishEnterpriseAppVersion(options: {
+  entProfileId: string;
+  entVersionId: string;
+  summary: string;
+  releaseNotes: string;
+  publishType: string;
+}) {
+  const versionResponse = await appcircleApi.patch(
+    `store/v2/profiles/${options.entProfileId}/app-versions/${options.entVersionId}?action=publish`,
+    {
+      summary: options.summary,
+      releaseNotes: options.releaseNotes,
+      publishType: options.publishType,
+    },
+    {
+      headers: UploadServiceHeaders.getHeaders(),
+    }
+  );
+  return versionResponse.data;
+}
+
+export async function getProfileId() {
+  const profiles = await getEnterpriseProfiles().then((res) =>
+    res.sort((a: any, b: any) => {
+      return (
+        new Date(b.lastBinaryReceivedDate).getTime() -
+        new Date(a.lastBinaryReceivedDate).getTime()
+      );
+    })
+  );
+
+  return profiles[0].id;
+}
+
+export async function checkTaskStatus(taskId: string, currentAttempt = 0) {
+  const response = await appcircleApi.get(`/task/v1/tasks/${taskId}`, {
+    headers: UploadServiceHeaders.getHeaders(),
   });
-}
 
-function uploadForProfile(
-  profileId: string,
-  app: string,
-  callback: () => void
-) {
-  const command = `appcircle enterprise-app-store version upload-for-profile --entProfileId ${profileId} --app ${app}`;
-  try {
-    execSync(command, { encoding: "utf-8" });
-    callback();
-  } catch (error: any) {
-    tl.setResult(tl.TaskResult.Failed, error);
-  }
-}
-
-function publishToAppStore(
-  entProfileId: string,
-  entVersionId: string,
-  summary: string,
-  releaseNote: string,
-  publishType: number,
-  callback: () => void
-) {
-  const command = `appcircle enterprise-app-store version publish --entProfileId ${entProfileId} --entVersionId ${entVersionId} --summary "${summary}" --releaseNotes "${releaseNote}" --publishType ${publishType}`;
-  try {
-    const output = execSync(command, { encoding: "utf-8" });
-    tl.setResult(tl.TaskResult.Succeeded, "App Published Successfully!");
-    callback();
-  } catch (error: any) {
-    tl.setResult(tl.TaskResult.Failed, error);
-  }
-}
-
-function getStoreVersionList(
-  entProfileId: string,
-  callback: (appVersionId: string) => void
-) {
-  const command = `appcircle enterprise-app-store version list --entProfileId ${entProfileId}  -o json`;
-
-  try {
-    const output = execSync(command, { encoding: "utf-8" });
-    const list = JSON.parse(output);
-    callback(list?.[0]?.id);
-  } catch (error: any) {
-    tl.setResult(tl.TaskResult.Failed, error);
-  }
-}
-
-function isVariableName(input: string): boolean {
-  const variablePrefix = "$(";
-  const variableSuffix = ")";
-  if (input.startsWith(variablePrefix) && input.endsWith(variableSuffix)) {
-    return true;
+  if (response?.data.stateValue == 1 && currentAttempt < 100) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return checkTaskStatus(taskId, currentAttempt + 1);
   }
 
-  return false;
+  if (response.data.stateValue === 2) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function getEnterpriseAppVersions(options: {
+  entProfileId: string;
+  publishType?: string;
+}) {
+  let versionType = "";
+  switch (options?.publishType) {
+    case "1":
+      versionType = "?publishtype=Beta";
+      break;
+    case "2":
+      versionType = "?publishtype=Live";
+    default:
+      break;
+  }
+
+  const profileResponse = await appcircleApi.get(
+    `store/v2/profiles/${options.entProfileId}/app-versions${versionType}`,
+    {
+      headers: UploadServiceHeaders.getHeaders(),
+    }
+  );
+  return profileResponse.data;
 }
