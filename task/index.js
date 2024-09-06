@@ -131,7 +131,6 @@ function run() {
                     return [3 /*break*/, 9];
                 case 8:
                     err_1 = _a.sent();
-                    console.log(err_1);
                     tl.setResult(tl.TaskResult.Failed, err_1.message);
                     return [3 /*break*/, 9];
                 case 9: return [2 /*return*/];

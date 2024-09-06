@@ -87,7 +87,6 @@ async function run() {
       `${appPath} uploaded to the Appcircle Enterprise App Store successfully`
     );
   } catch (err: any) {
-    console.log(err);
     tl.setResult(tl.TaskResult.Failed, err.message);
   }
 }

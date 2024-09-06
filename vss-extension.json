@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "enterprise-app-store",
   "name": "Appcircle Enterprise App Store",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "publisher": "Appcircle",
   "public": true,
   "targets": [

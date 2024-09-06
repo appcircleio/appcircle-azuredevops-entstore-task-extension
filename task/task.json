@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "b8941f3f-aee4-4e0f-849b-eb19c26ce729",
   "name": "AppcircleEnterpriseStore",
-  "friendlyName": "Appcircle Enterprise Store - Dev",
+  "friendlyName": "Appcircle Enterprise App Store",
   "description": "Efficiently publish your apps to Appcircle Enterprise Store.",
   "helpMarkDown": "",
   "category": "Utility",
@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 34
+    "Patch": 30
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
