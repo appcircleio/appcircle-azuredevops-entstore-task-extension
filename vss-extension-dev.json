@@ -1,10 +1,10 @@
 {
   "manifestVersion": 1,
-  "id": "enterprise-app-store",
-  "name": "Appcircle Enterprise App Store",
-  "version": "0.0.30",
+  "id": "enterprise-app-store-dev",
+  "name": "Appcircle Enterprise App Store - Dev",
+  "version": "0.0.34",
   "publisher": "Appcircle",
-  "public": true,
+  "public": false,
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"

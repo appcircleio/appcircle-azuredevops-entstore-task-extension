@@ -2,34 +2,26 @@
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "b8941f3f-aee4-4e0f-849b-eb19c26ce729",
   "name": "AppcircleEnterpriseStore",
-  "friendlyName": "Appcircle Enterprise Store",
+  "friendlyName": "Appcircle Enterprise App Store",
   "description": "Efficiently publish your apps to Appcircle Enterprise Store.",
   "helpMarkDown": "",
   "category": "Utility",
   "author": "appcircle",
   "version": {
     "Major": 0,
-    "Minor": 1,
-    "Patch": 0
+    "Minor": 0,
+    "Patch": 30
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
   "inputs": [
     {
-      "name": "accessToken",
+      "name": "personalAPIToken",
       "type": "string",
       "label": "Appcircle Personal API Token",
       "defaultValue": "",
       "required": true,
       "helpMarkDown": "Provide the Appcircle Personal API Token to authenticate connections to Appcircle services. This token allows your Azure DevOps pipeline to interact with Appcircle for distributing applications."
-    },
-    {
-      "name": "entProfileId",
-      "type": "string",
-      "label": "Enterprise Profile Id",
-      "defaultValue": "",
-      "required": true,
-      "helpMarkDown": "Provide the Appcircle Enterprise App Store Mobile Profile ID to specify the profile to be used for the publishment. This ID can be found in the Enterprise App Store Mobile module dashboard."
     },
     {
       "name": "appPath",
@@ -69,7 +61,7 @@
     }
   ],
   "execution": {
-    "Node": {
+    "Node16": {
       "target": "index.js"
     }
   }

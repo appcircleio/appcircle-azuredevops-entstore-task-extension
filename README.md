@@ -27,6 +27,14 @@ Learn more about [Appcircle Enterprise App Store](https://appcircle.io/enterpris
 
 These features make the Appcircle Enterprise Mobile App Store a powerful tool for securely and efficiently distributing in-house applications, offering flexibility, enhanced security, and a streamlined workflow.
 
+**Compatible Agents:**
+
+- macos-14 (arm64)
+- Ubuntu-22.04
+
+Note: Currently, plugins are only compatible to use with Appcircle Cloud.
+Self-hosted support will be available in future releases.
+
 ![Enterprise App Store Dashboard](images/ent_app_store.png)
 
 ### Generating/Managing the Personal API Tokens
@@ -50,17 +58,35 @@ To generate a Personal API Token:
 ```yaml
 - task: AppcircleEnterpriseStore@0
   inputs:
-    accessToken: "YOUR_PAT" # Your Appcircle Personal API Token
-    entProfileId: "PROFILE_ID" # ID of your Appcircle Enterprise Mobile App Store Profile
-    appPath: "APK_PATH" # Path to your iOS .ipa, or Android APK
-    summary: "Summary Notes" # Summary Notes about the version of your app
-    releaseNotes: "Release Notes" # Release Notes about the version of your app
-    publishType: "Beta" # Publishment type of your app None|Beta|Live
+    personalAPIToken: $(AC_PERSONAL_API_TOKEN)
+    appPath: $(APP_PATH)
+    summary: $(SUMMARY)
+    releaseNotes: $(RELEASE_NOTES)
+    publishType: $(PUBLISH_TYPE) # "0": None, "1": Beta, "2": Live
 ```
+
+- `personalAPIToken`: The Appcircle Personal API token is utilized to
+  authenticate and secure access to Appcircle services, ensuring that only
+  authorized users can perform actions within the platform.
+- `appPath`: Indicates the file path to the application that will be uploaded to
+  Appcircle Testing Distribution Profile.
+- `releaseNote`: Contains the details of changes, updates, and improvements made
+  in the current version of the app being published.
+- `Summary`: Used to provide a brief overview of the version of the app that is
+  about to be published.
+- `publishType`: Specifies the publishing status as either none, beta, or live,
+  and must be assigned the values "0", "1", or "2" accordingly.
 
 ### Leveraging Environment Variables
 
 Utilize environment variables seamlessly by substituting the parameters with $(VARIABLE_NAME) in your task inputs. The extension automatically retrieves values from the specified environment variables within your pipeline.
+
+**Ensure that this action is added after build steps have been completed.**
+
+**If two workflows start simultaneously, the last workflow to reach the publish
+step will be the up-to-date version on the Enterprise App Store. If these
+workflows building the same package version, the first publish will be
+successful, while later deployments with the same version will fail.**
 
 If you would like to learn more about this extension and how to utilize it in your projects, please [contact us](https://appcircle.io/contact?&utm_source=azure&utm_medium=product&utm_campaign=enterprise_app_store)
 
