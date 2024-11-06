@@ -16,6 +16,10 @@
     "package:watch": "tsc --watch ./task/index.ts"
   },
   "dependencies": {
-    "azure-devops-extension-sdk": "^4.0.2"
+    "@types/node": "^22.9.0",
+    "@types/axios": "^0.14.4",
+    "@types/form-data": "^2.5.2",
+    "azure-devops-extension-sdk": "^4.0.2",
+    "azure-pipelines-task-lib": "^4.17.3"
   }
 }
