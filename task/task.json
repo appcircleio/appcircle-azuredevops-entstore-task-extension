@@ -29,7 +29,7 @@
       "label": "App Path",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Specify the path to your application file. For iOS, this can be a .ipa. For Android, specify the .apk or .appbundle file path."
+      "helpMarkDown": "Specify the path to your application file. For iOS, this can be a .ipa. For Android, specify the .apk or .aab file path."
     },
     {
       "name": "summary",

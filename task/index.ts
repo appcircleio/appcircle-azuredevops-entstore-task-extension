@@ -12,12 +12,12 @@ async function run() {
     const _publishType = tl.getInputRequired("publishType");
     var publishType = "0";
 
-    const validExtensions = [".apk", ".ipa"];
+    const validExtensions = [".apk", ".aab", ".ipa"];
     const fileExtension = appPath.slice(appPath.lastIndexOf(".")).toLowerCase();
     if (!validExtensions.includes(fileExtension)) {
       tl.setResult(
         tl.TaskResult.Failed,
-        `Invalid file extension: ${appPath}. For Android, use .apk. For iOS, use .ipa.`
+        `Invalid file extension: ${appPath}. For Android, use .apk or .aab. For iOS, use .ipa.`
       );
       return;
     }
