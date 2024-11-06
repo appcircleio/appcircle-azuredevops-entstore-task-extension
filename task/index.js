@@ -20,12 +20,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -46,8 +46,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-exports.getEnterpriseAppVersions = exports.checkTaskStatus = exports.getProfileId = exports.publishEnterpriseAppVersion = exports.uploadEnterpriseApp = exports.getEnterpriseProfiles = exports.appcircleApi = exports.UploadServiceHeaders = exports.getToken = void 0;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.appcircleApi = exports.UploadServiceHeaders = void 0;
+exports.getToken = getToken;
+exports.getEnterpriseProfiles = getEnterpriseProfiles;
+exports.uploadEnterpriseApp = uploadEnterpriseApp;
+exports.publishEnterpriseAppVersion = publishEnterpriseAppVersion;
+exports.getProfileId = getProfileId;
+exports.checkTaskStatus = checkTaskStatus;
+exports.getEnterpriseAppVersions = getEnterpriseAppVersions;
 var tl = require("azure-pipelines-task-lib/task");
 var axios_1 = require("axios");
 var fs = require("fs");
@@ -65,10 +72,10 @@ function run() {
                     releaseNotes = tl.getInputRequired("releaseNotes");
                     _publishType = tl.getInputRequired("publishType");
                     publishType = "0";
-                    validExtensions = [".apk", ".ipa"];
+                    validExtensions = [".apk", ".aab", ".ipa"];
                     fileExtension = appPath.slice(appPath.lastIndexOf(".")).toLowerCase();
                     if (!validExtensions.includes(fileExtension)) {
-                        tl.setResult(tl.TaskResult.Failed, "Invalid file extension: ".concat(appPath, ". For Android, use .apk. For iOS, use .ipa."));
+                        tl.setResult(tl.TaskResult.Failed, "Invalid file extension: ".concat(appPath, ". For Android, use .apk or .aab. For iOS, use .ipa."));
                         return [2 /*return*/];
                     }
                     if (_publishType !== "None" &&
@@ -110,7 +117,7 @@ function run() {
                 case 4:
                     profileId = _a.sent();
                     return [4 /*yield*/, getEnterpriseAppVersions({
-                            entProfileId: profileId
+                            entProfileId: profileId,
                         })];
                 case 5:
                     appVersions = _a.sent();
@@ -120,7 +127,7 @@ function run() {
                             entVersionId: entVersionId,
                             summary: summary,
                             releaseNotes: releaseNotes,
-                            publishType: publishType
+                            publishType: publishType,
                         })];
                 case 6:
                     _a.sent();
@@ -151,18 +158,18 @@ function getToken(pat) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"].post("https://auth.appcircle.io/auth/v1/token", params.toString(), {
+                    return [4 /*yield*/, axios_1.default.post("https://auth.appcircle.io/auth/v1/token", params.toString(), {
                             headers: {
                                 accept: "application/json",
-                                "content-type": "application/x-www-form-urlencoded"
-                            }
+                                "content-type": "application/x-www-form-urlencoded",
+                            },
                         })];
                 case 2:
                     response = _a.sent();
                     return [2 /*return*/, response.data];
                 case 3:
                     error_1 = _a.sent();
-                    if (axios_1["default"].isAxiosError(error_1)) {
+                    if (axios_1.default.isAxiosError(error_1)) {
                         console.error("Axios error:", error_1.message);
                         if (error_1.response) {
                             console.error("Response data:", error_1.response.data);
@@ -178,7 +185,6 @@ function getToken(pat) {
         });
     });
 }
-exports.getToken = getToken;
 var UploadServiceHeaders = /** @class */ (function () {
     function UploadServiceHeaders() {
     }
@@ -186,7 +192,7 @@ var UploadServiceHeaders = /** @class */ (function () {
     UploadServiceHeaders.getHeaders = function () {
         var response = {
             accept: "application/json",
-            "User-Agent": "Appcircle Github Action"
+            "User-Agent": "Appcircle Github Action",
         };
         response.Authorization = "Bearer ".concat(UploadServiceHeaders.token);
         return response;
@@ -195,8 +201,8 @@ var UploadServiceHeaders = /** @class */ (function () {
 }());
 exports.UploadServiceHeaders = UploadServiceHeaders;
 var API_HOSTNAME = "https://api.appcircle.io";
-exports.appcircleApi = axios_1["default"].create({
-    baseURL: API_HOSTNAME.endsWith("/") ? API_HOSTNAME : "".concat(API_HOSTNAME, "/")
+exports.appcircleApi = axios_1.default.create({
+    baseURL: API_HOSTNAME.endsWith("/") ? API_HOSTNAME : "".concat(API_HOSTNAME, "/"),
 });
 function getEnterpriseProfiles() {
     return __awaiter(this, void 0, void 0, function () {
@@ -204,7 +210,7 @@ function getEnterpriseProfiles() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, exports.appcircleApi.get("store/v2/profiles", {
-                        headers: UploadServiceHeaders.getHeaders()
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     buildProfiles = _a.sent();
@@ -213,7 +219,6 @@ function getEnterpriseProfiles() {
         });
     });
 }
-exports.getEnterpriseProfiles = getEnterpriseProfiles;
 function uploadEnterpriseApp(app) {
     return __awaiter(this, void 0, void 0, function () {
         var data, uploadResponse;
@@ -225,7 +230,7 @@ function uploadEnterpriseApp(app) {
                     return [4 /*yield*/, exports.appcircleApi.post("store/v2/profiles/app-versions", data, {
                             maxContentLength: Infinity,
                             maxBodyLength: Infinity,
-                            headers: __assign(__assign(__assign({}, UploadServiceHeaders.getHeaders()), data.getHeaders()), { "Content-Type": "multipart/form-data;boundary=" + data.getBoundary() })
+                            headers: __assign(__assign(__assign({}, UploadServiceHeaders.getHeaders()), data.getHeaders()), { "Content-Type": "multipart/form-data;boundary=" + data.getBoundary() }),
                         })];
                 case 1:
                     uploadResponse = _a.sent();
@@ -234,7 +239,6 @@ function uploadEnterpriseApp(app) {
         });
     });
 }
-exports.uploadEnterpriseApp = uploadEnterpriseApp;
 function publishEnterpriseAppVersion(options) {
     return __awaiter(this, void 0, void 0, function () {
         var versionResponse;
@@ -243,9 +247,9 @@ function publishEnterpriseAppVersion(options) {
                 case 0: return [4 /*yield*/, exports.appcircleApi.patch("store/v2/profiles/".concat(options.entProfileId, "/app-versions/").concat(options.entVersionId, "?action=publish"), {
                         summary: options.summary,
                         releaseNotes: options.releaseNotes,
-                        publishType: options.publishType
+                        publishType: options.publishType,
                     }, {
-                        headers: UploadServiceHeaders.getHeaders()
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     versionResponse = _a.sent();
@@ -254,7 +258,6 @@ function publishEnterpriseAppVersion(options) {
         });
     });
 }
-exports.publishEnterpriseAppVersion = publishEnterpriseAppVersion;
 function getProfileId() {
     return __awaiter(this, void 0, void 0, function () {
         var profiles;
@@ -273,15 +276,14 @@ function getProfileId() {
         });
     });
 }
-exports.getProfileId = getProfileId;
-function checkTaskStatus(taskId, currentAttempt) {
-    if (currentAttempt === void 0) { currentAttempt = 0; }
-    return __awaiter(this, void 0, void 0, function () {
+function checkTaskStatus(taskId_1) {
+    return __awaiter(this, arguments, void 0, function (taskId, currentAttempt) {
         var response;
+        if (currentAttempt === void 0) { currentAttempt = 0; }
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, exports.appcircleApi.get("/task/v1/tasks/".concat(taskId), {
-                        headers: UploadServiceHeaders.getHeaders()
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     response = _a.sent();
@@ -299,7 +301,6 @@ function checkTaskStatus(taskId, currentAttempt) {
         });
     });
 }
-exports.checkTaskStatus = checkTaskStatus;
 function getEnterpriseAppVersions(options) {
     return __awaiter(this, void 0, void 0, function () {
         var versionType, profileResponse;
@@ -317,7 +318,7 @@ function getEnterpriseAppVersions(options) {
                             break;
                     }
                     return [4 /*yield*/, exports.appcircleApi.get("store/v2/profiles/".concat(options.entProfileId, "/app-versions").concat(versionType), {
-                            headers: UploadServiceHeaders.getHeaders()
+                            headers: UploadServiceHeaders.getHeaders(),
                         })];
                 case 1:
                     profileResponse = _a.sent();
@@ -326,4 +327,3 @@ function getEnterpriseAppVersions(options) {
         });
     });
 }
-exports.getEnterpriseAppVersions = getEnterpriseAppVersions;
