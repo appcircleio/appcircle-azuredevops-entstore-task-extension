@@ -1,23 +1,13 @@
 {
-  "name": "appcircle-enterprise-appstore-task",
-  "version": "1.0.0",
-  "description": "",
+  "name": "appcircle-azuredevops-entstore-extension.task",
+  "version": "0.0.70",
+  "description": "NPM Package for Appcircle Enterprise App Store Task",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "tsc ./index.ts",
-    "package:watch": "tsc --watch ./index.ts"
-  },
-  "keywords": [],
-  "author": "",
+  "author": "Appcircle",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.7.7",
-    "azure-pipelines-task-lib": "^4.11.0",
-    "form-data": "^4.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "20.12.11",
-    "@types/q": "^1.5.8"
+    "azure-devops-extension-sdk": "^4.0.2",
+    "azure-pipelines-task-lib": "^4.17.3"
   }
 }

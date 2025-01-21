@@ -20,12 +20,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -46,20 +46,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-exports.getEnterpriseAppVersions = exports.checkTaskStatus = exports.getProfileId = exports.publishEnterpriseAppVersion = exports.uploadEnterpriseApp = exports.getEnterpriseProfiles = exports.appcircleApi = exports.UploadServiceHeaders = exports.getToken = void 0;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UploadServiceHeaders = void 0;
+exports.getToken = getToken;
+exports.getEnterpriseProfiles = getEnterpriseProfiles;
+exports.uploadEnterpriseApp = uploadEnterpriseApp;
+exports.publishEnterpriseAppVersion = publishEnterpriseAppVersion;
+exports.getProfileId = getProfileId;
+exports.checkTaskStatus = checkTaskStatus;
+exports.getEnterpriseAppVersions = getEnterpriseAppVersions;
 var tl = require("azure-pipelines-task-lib/task");
 var axios_1 = require("axios");
 var fs = require("fs");
 var FormData = require("form-data");
 function run() {
     return __awaiter(this, void 0, void 0, function () {
-        var personalAPIToken, appPath, summary, releaseNotes, _publishType, publishType, validExtensions, fileExtension, loginResponse, uploadResponse, status_1, profileId, appVersions, entVersionId, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var personalAPIToken, authEndpoint, apiEndpoint, appPath, summary, releaseNotes, _publishType, publishType, validExtensions, fileExtension, apiEndpointUrl, appcircleApi, loginResponse, uploadResponse, status_1, profileId, appVersions, entVersionId, err_1;
+        var _a, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    _a.trys.push([0, 8, , 9]);
+                    _c.trys.push([0, 8, , 9]);
                     personalAPIToken = tl.getInputRequired("personalAPIToken");
+                    authEndpoint = (_a = tl.getInput("authEndpoint")) !== null && _a !== void 0 ? _a : "https://auth.appcircle.io";
+                    apiEndpoint = (_b = tl.getInput("apiEndpoint")) !== null && _b !== void 0 ? _b : "https://api.appcircle.io";
                     appPath = tl.getInputRequired("appPath");
                     summary = tl.getInputRequired("summary");
                     releaseNotes = tl.getInputRequired("releaseNotes");
@@ -90,47 +100,51 @@ function run() {
                         default:
                             break;
                     }
-                    return [4 /*yield*/, getToken(personalAPIToken)];
+                    apiEndpointUrl = new URL(apiEndpoint).toString();
+                    appcircleApi = axios_1.default.create({
+                        baseURL: apiEndpointUrl,
+                    });
+                    return [4 /*yield*/, getToken(personalAPIToken, authEndpoint)];
                 case 1:
-                    loginResponse = _a.sent();
+                    loginResponse = _c.sent();
                     UploadServiceHeaders.token = loginResponse.access_token;
                     console.log("Logged in to Appcircle successfully");
-                    return [4 /*yield*/, uploadEnterpriseApp(appPath)];
+                    return [4 /*yield*/, uploadEnterpriseApp(appcircleApi, appPath)];
                 case 2:
-                    uploadResponse = _a.sent();
-                    return [4 /*yield*/, checkTaskStatus(uploadResponse.taskId)];
+                    uploadResponse = _c.sent();
+                    return [4 /*yield*/, checkTaskStatus(appcircleApi, uploadResponse.taskId)];
                 case 3:
-                    status_1 = _a.sent();
+                    status_1 = _c.sent();
                     if (!status_1) {
                         tl.setResult(tl.TaskResult.Failed, "".concat(uploadResponse.taskId, " id upload request failed with status Cancelled"));
                         return [2 /*return*/];
                     }
                     if (!(publishType !== "0")) return [3 /*break*/, 7];
-                    return [4 /*yield*/, getProfileId()];
+                    return [4 /*yield*/, getProfileId(appcircleApi)];
                 case 4:
-                    profileId = _a.sent();
-                    return [4 /*yield*/, getEnterpriseAppVersions({
-                            entProfileId: profileId
+                    profileId = _c.sent();
+                    return [4 /*yield*/, getEnterpriseAppVersions(appcircleApi, {
+                            entProfileId: profileId,
                         })];
                 case 5:
-                    appVersions = _a.sent();
+                    appVersions = _c.sent();
                     entVersionId = appVersions[0].id;
-                    return [4 /*yield*/, publishEnterpriseAppVersion({
+                    return [4 /*yield*/, publishEnterpriseAppVersion(appcircleApi, {
                             entProfileId: profileId,
                             entVersionId: entVersionId,
                             summary: summary,
                             releaseNotes: releaseNotes,
-                            publishType: publishType
+                            publishType: publishType,
                         })];
                 case 6:
-                    _a.sent();
-                    _a.label = 7;
+                    _c.sent();
+                    _c.label = 7;
                 case 7:
                     console.log("".concat(appPath, " uploaded to the Appcircle Enterprise App Store successfully"));
                     tl.setResult(tl.TaskResult.Succeeded, "".concat(appPath, " uploaded to the Appcircle Enterprise App Store successfully"));
                     return [3 /*break*/, 9];
                 case 8:
-                    err_1 = _a.sent();
+                    err_1 = _c.sent();
                     tl.setResult(tl.TaskResult.Failed, err_1.message);
                     return [3 /*break*/, 9];
                 case 9: return [2 /*return*/];
@@ -140,9 +154,9 @@ function run() {
 }
 run();
 /* API */
-function getToken(pat) {
+function getToken(pat, authEndpoint) {
     return __awaiter(this, void 0, void 0, function () {
-        var params, response, error_1;
+        var params, url, response, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -151,18 +165,19 @@ function getToken(pat) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"].post("https://auth.appcircle.io/auth/v1/token", params.toString(), {
+                    url = new URL('/auth/v1/token', authEndpoint).toString();
+                    return [4 /*yield*/, axios_1.default.post(url, params.toString(), {
                             headers: {
                                 accept: "application/json",
-                                "content-type": "application/x-www-form-urlencoded"
-                            }
+                                "content-type": "application/x-www-form-urlencoded",
+                            },
                         })];
                 case 2:
                     response = _a.sent();
                     return [2 /*return*/, response.data];
                 case 3:
                     error_1 = _a.sent();
-                    if (axios_1["default"].isAxiosError(error_1)) {
+                    if (axios_1.default.isAxiosError(error_1)) {
                         console.error("Axios error:", error_1.message);
                         if (error_1.response) {
                             console.error("Response data:", error_1.response.data);
@@ -178,7 +193,6 @@ function getToken(pat) {
         });
     });
 }
-exports.getToken = getToken;
 var UploadServiceHeaders = /** @class */ (function () {
     function UploadServiceHeaders() {
     }
@@ -186,7 +200,7 @@ var UploadServiceHeaders = /** @class */ (function () {
     UploadServiceHeaders.getHeaders = function () {
         var response = {
             accept: "application/json",
-            "User-Agent": "Appcircle Github Action"
+            "User-Agent": "Appcircle Github Action",
         };
         response.Authorization = "Bearer ".concat(UploadServiceHeaders.token);
         return response;
@@ -194,17 +208,13 @@ var UploadServiceHeaders = /** @class */ (function () {
     return UploadServiceHeaders;
 }());
 exports.UploadServiceHeaders = UploadServiceHeaders;
-var API_HOSTNAME = "https://api.appcircle.io";
-exports.appcircleApi = axios_1["default"].create({
-    baseURL: API_HOSTNAME.endsWith("/") ? API_HOSTNAME : "".concat(API_HOSTNAME, "/")
-});
-function getEnterpriseProfiles() {
+function getEnterpriseProfiles(api) {
     return __awaiter(this, void 0, void 0, function () {
         var buildProfiles;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, exports.appcircleApi.get("store/v2/profiles", {
-                        headers: UploadServiceHeaders.getHeaders()
+                case 0: return [4 /*yield*/, api.get("store/v2/profiles", {
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     buildProfiles = _a.sent();
@@ -213,8 +223,7 @@ function getEnterpriseProfiles() {
         });
     });
 }
-exports.getEnterpriseProfiles = getEnterpriseProfiles;
-function uploadEnterpriseApp(app) {
+function uploadEnterpriseApp(api, app) {
     return __awaiter(this, void 0, void 0, function () {
         var data, uploadResponse;
         return __generator(this, function (_a) {
@@ -222,10 +231,10 @@ function uploadEnterpriseApp(app) {
                 case 0:
                     data = new FormData();
                     data.append("File", fs.createReadStream(app));
-                    return [4 /*yield*/, exports.appcircleApi.post("store/v2/profiles/app-versions", data, {
+                    return [4 /*yield*/, api.post("store/v2/profiles/app-versions", data, {
                             maxContentLength: Infinity,
                             maxBodyLength: Infinity,
-                            headers: __assign(__assign(__assign({}, UploadServiceHeaders.getHeaders()), data.getHeaders()), { "Content-Type": "multipart/form-data;boundary=" + data.getBoundary() })
+                            headers: __assign(__assign(__assign({}, UploadServiceHeaders.getHeaders()), data.getHeaders()), { "Content-Type": "multipart/form-data;boundary=" + data.getBoundary() }),
                         })];
                 case 1:
                     uploadResponse = _a.sent();
@@ -234,18 +243,17 @@ function uploadEnterpriseApp(app) {
         });
     });
 }
-exports.uploadEnterpriseApp = uploadEnterpriseApp;
-function publishEnterpriseAppVersion(options) {
+function publishEnterpriseAppVersion(api, options) {
     return __awaiter(this, void 0, void 0, function () {
         var versionResponse;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, exports.appcircleApi.patch("store/v2/profiles/".concat(options.entProfileId, "/app-versions/").concat(options.entVersionId, "?action=publish"), {
+                case 0: return [4 /*yield*/, api.patch("store/v2/profiles/".concat(options.entProfileId, "/app-versions/").concat(options.entVersionId, "?action=publish"), {
                         summary: options.summary,
                         releaseNotes: options.releaseNotes,
-                        publishType: options.publishType
+                        publishType: options.publishType,
                     }, {
-                        headers: UploadServiceHeaders.getHeaders()
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     versionResponse = _a.sent();
@@ -254,13 +262,12 @@ function publishEnterpriseAppVersion(options) {
         });
     });
 }
-exports.publishEnterpriseAppVersion = publishEnterpriseAppVersion;
-function getProfileId() {
+function getProfileId(api) {
     return __awaiter(this, void 0, void 0, function () {
         var profiles;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, getEnterpriseProfiles().then(function (res) {
+                case 0: return [4 /*yield*/, getEnterpriseProfiles(api).then(function (res) {
                         return res.sort(function (a, b) {
                             return (new Date(b.lastBinaryReceivedDate).getTime() -
                                 new Date(a.lastBinaryReceivedDate).getTime());
@@ -273,15 +280,14 @@ function getProfileId() {
         });
     });
 }
-exports.getProfileId = getProfileId;
-function checkTaskStatus(taskId, currentAttempt) {
-    if (currentAttempt === void 0) { currentAttempt = 0; }
-    return __awaiter(this, void 0, void 0, function () {
+function checkTaskStatus(api_1, taskId_1) {
+    return __awaiter(this, arguments, void 0, function (api, taskId, currentAttempt) {
         var response;
+        if (currentAttempt === void 0) { currentAttempt = 0; }
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, exports.appcircleApi.get("/task/v1/tasks/".concat(taskId), {
-                        headers: UploadServiceHeaders.getHeaders()
+                case 0: return [4 /*yield*/, api.get("/task/v1/tasks/".concat(taskId), {
+                        headers: UploadServiceHeaders.getHeaders(),
                     })];
                 case 1:
                     response = _a.sent();
@@ -289,7 +295,7 @@ function checkTaskStatus(taskId, currentAttempt) {
                     return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 1000); })];
                 case 2:
                     _a.sent();
-                    return [2 /*return*/, checkTaskStatus(taskId, currentAttempt + 1)];
+                    return [2 /*return*/, checkTaskStatus(api, taskId, currentAttempt + 1)];
                 case 3:
                     if (response.data.stateValue === 2) {
                         return [2 /*return*/, false];
@@ -299,8 +305,7 @@ function checkTaskStatus(taskId, currentAttempt) {
         });
     });
 }
-exports.checkTaskStatus = checkTaskStatus;
-function getEnterpriseAppVersions(options) {
+function getEnterpriseAppVersions(api, options) {
     return __awaiter(this, void 0, void 0, function () {
         var versionType, profileResponse;
         return __generator(this, function (_a) {
@@ -316,8 +321,8 @@ function getEnterpriseAppVersions(options) {
                         default:
                             break;
                     }
-                    return [4 /*yield*/, exports.appcircleApi.get("store/v2/profiles/".concat(options.entProfileId, "/app-versions").concat(versionType), {
-                            headers: UploadServiceHeaders.getHeaders()
+                    return [4 /*yield*/, api.get("store/v2/profiles/".concat(options.entProfileId, "/app-versions").concat(versionType), {
+                            headers: UploadServiceHeaders.getHeaders(),
                         })];
                 case 1:
                     profileResponse = _a.sent();
@@ -326,4 +331,3 @@ function getEnterpriseAppVersions(options) {
         });
     });
 }
-exports.getEnterpriseAppVersions = getEnterpriseAppVersions;

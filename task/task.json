@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 30
+    "Patch": 38
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
@@ -22,6 +22,22 @@
       "defaultValue": "",
       "required": true,
       "helpMarkDown": "Provide the Appcircle Personal API Token to authenticate connections to Appcircle services. This token allows your Azure DevOps pipeline to interact with Appcircle for distributing applications."
+    },
+    {
+      "name": "authEndpoint",
+      "type": "string",
+      "label": "Auth Endpoint URL",
+      "defaultValue": "https://auth.appcircle.io",
+      "required": false,
+      "helpMarkDown": "Specify the authentication endpoint URL for self-hosted Appcircle installations. Default is the cloud endpoint: https://auth.appcircle.io"
+    },
+    {
+      "name": "apiEndpoint",
+      "type": "string",
+      "label": "API Endpoint URL",
+      "defaultValue": "https://api.appcircle.io",
+      "required": false,
+      "helpMarkDown": "Specify the API endpoint URL for self-hosted Appcircle installations. Default is the cloud endpoint: https://api.appcircle.io"
     },
     {
       "name": "appPath",
