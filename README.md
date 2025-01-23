@@ -48,7 +48,7 @@ To generate a Personal API Token:
     appPath: $(AC_APP_PATH)
     summary: $(AC_SUMMARY)
     releaseNotes: $(AC_RELEASE_NOTES)
-    publishType: $(AC_PUBLISH_TYPE) # "0": None, "1": Beta, "2": Live
+    publishType: $(AC_PUBLISH_TYPE)
 ```
 
 - `personalAPIToken`: The Appcircle Personal API token used to authenticate and authorize access to Appcircle services within this extension.
@@ -61,7 +61,7 @@ To generate a Personal API Token:
 - `Summary`: Used to provide a brief overview of the version of the app that is
   about to be published.
 - `publishType`: Specifies the publishing status as either none, beta, or live,
-  and must be assigned the values "0", "1", or "2" accordingly.
+  and must be assigned the values "None", "Beta", or "Live" accordingly.
 
 ## Further Details
 
