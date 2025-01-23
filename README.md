@@ -27,17 +27,7 @@ Learn more about [Appcircle Enterprise App Store](https://appcircle.io/enterpris
 
 These features make the Appcircle Enterprise Mobile App Store a powerful tool for securely and efficiently distributing in-house applications, offering flexibility, enhanced security, and a streamlined workflow.
 
-<!-- ![Enterprise App Store Dashboard](images/ent_app_store.png)
-
-### Generating/Managing the Personal API Tokens
-
-To generate a Personal API Token:
-
-1. Go to the My Organization screen (second option at the bottom left).
-2. Find the Personal API Token section in the top right corner.
-3. Press the "Generate Token" button to generate your first token.
-
-![Token Generation](images/PAT.png) -->
+<!-- ![Enterprise App Store Dashboard](images/ent_app_store.png) -->
 
 ## How to use Appcircle Enterprise Mobile App Store Extension
 
