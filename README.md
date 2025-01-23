@@ -60,7 +60,7 @@ To generate a Personal API Token:
   Appcircle Enterprise App Store.
 - `releaseNote`: Contains the details of changes, updates, and improvements made
   in the current version of the app being published.
-- `Summary`: Used to provide a brief overview of the version of the app that is
+- `summary`: Used to provide a brief overview of the version of the app that is
   about to be published.
 - `publishType`: Specifies the publishing status as either none, beta, or live,
   and must be assigned the values "None", "Beta", or "Live" accordingly.
