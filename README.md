@@ -44,8 +44,8 @@ These features make the Appcircle Enterprise Mobile App Store a powerful tool fo
 ```
 
 - `personalAPIToken`: The Appcircle Personal API token used to authenticate and authorize access to Appcircle services within this extension.
-- `authEndpoint` (optional): Authentication endpoint URL for self-hosted Appcircle installations. Defaults to https://auth.appcircle.io.
-- `apiEndpoint` (optional): API endpoint URL for self-hosted Appcircle installations. Defaults to https://api.appcircle.io.
+- `authEndpoint` (optional): Authentication endpoint URL for self-hosted Appcircle installations. Defaults to `https://auth.appcircle.io`.
+- `apiEndpoint` (optional): API endpoint URL for self-hosted Appcircle installations. Defaults to `https://api.appcircle.io`.
 - `appPath`: Indicates the file path to the application that will be uploaded to
   Appcircle Enterprise App Store.
 - `releaseNote`: Contains the details of changes, updates, and improvements made
