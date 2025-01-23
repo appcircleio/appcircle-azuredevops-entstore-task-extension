@@ -45,6 +45,8 @@ To generate a Personal API Token:
 - task: AppcircleEnterpriseStore@0
   inputs:
     personalAPIToken: $(AC_PERSONAL_API_TOKEN)
+    authEndpoint: $(AC_AUTH_ENDPOINT)
+    apiEndpoint: $(AC_API_ENDPOINT)
     appPath: $(AC_APP_PATH)
     summary: $(AC_SUMMARY)
     releaseNotes: $(AC_RELEASE_NOTES)
