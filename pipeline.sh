@@ -32,7 +32,7 @@ echo "=== Build Package ==="
 echo
 yarn package
 
-BRANCH_NAME="release/0.1.0"
+BRANCH_NAME="main"
 
 echo "=== Create Extension ==="
 echo
