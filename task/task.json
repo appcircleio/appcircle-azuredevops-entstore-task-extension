@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 30
+    "Patch": 40
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
@@ -24,12 +24,28 @@
       "helpMarkDown": "Provide the Appcircle Personal API Token to authenticate connections to Appcircle services. This token allows your Azure DevOps pipeline to interact with Appcircle for distributing applications."
     },
     {
+      "name": "authEndpoint",
+      "type": "string",
+      "label": "Auth Endpoint URL",
+      "defaultValue": "https://auth.appcircle.io",
+      "required": false,
+      "helpMarkDown": "Specify the authentication endpoint URL for self-hosted Appcircle installations. Default is the cloud endpoint: https://auth.appcircle.io"
+    },
+    {
+      "name": "apiEndpoint",
+      "type": "string",
+      "label": "API Endpoint URL",
+      "defaultValue": "https://api.appcircle.io",
+      "required": false,
+      "helpMarkDown": "Specify the API endpoint URL for self-hosted Appcircle installations. Default is the cloud endpoint: https://api.appcircle.io"
+    },
+    {
       "name": "appPath",
       "type": "string",
       "label": "App Path",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Specify the path to your application file. For iOS, this can be a .ipa. For Android, specify the .apk or .appbundle file path."
+      "helpMarkDown": "Specify the path to your application file. For iOS, this can be a .ipa. For Android, specify the .apk or .aab file path."
     },
     {
       "name": "summary",

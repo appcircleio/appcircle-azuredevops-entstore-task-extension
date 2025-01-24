@@ -1,19 +1,28 @@
 {
-  "name": "appcircle-azuredevops-entstore-task-extension",
-  "version": "0.0.1",
-  "description": "azure task extension for appcircle enterprise app store publish",
+  "name": "appcircle-azuredevops-entstore-extension",
+  "version": "0.0.70",
+  "description": "NPM Package for Appcircle Enterprise App Store Extension",
   "main": "index.js",
+  "scripts": {
+    "package": "tsc ./task/index.ts",
+    "package:watch": "tsc --watch ./task/index.ts"
+  },
+  "author": "Appcircle",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/appcircleio/appcircle-azuredevops-entstore-task-extension"
   },
-  "author": "appcircle",
-  "contributors": [],
-  "scripts": {
-    "test": ""
-  },
   "dependencies": {
-    "azure-devops-extension-sdk": "^4.0.2"
+    "axios": "^1.7.7",
+    "azure-devops-extension-sdk": "^4.0.2",
+    "azure-pipelines-task-lib": "^4.17.3"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/form-data": "^2.5.2",
+    "@types/node": "^22.9.0",
+    "@types/q": "^1.5.8",
+    "tfx-cli": "^0.15.0"
   }
 }

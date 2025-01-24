@@ -1,23 +1,25 @@
 import * as tl from "azure-pipelines-task-lib/task";
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import * as fs from "fs";
 import * as FormData from "form-data";
 
 async function run() {
   try {
     const personalAPIToken = tl.getInputRequired("personalAPIToken");
+    const authEndpoint = tl.getInput("authEndpoint") ?? "https://auth.appcircle.io";
+    const apiEndpoint = tl.getInput("apiEndpoint") ?? "https://api.appcircle.io";
     const appPath = tl.getInputRequired("appPath");
     const summary = tl.getInputRequired("summary");
     const releaseNotes = tl.getInputRequired("releaseNotes");
     const _publishType = tl.getInputRequired("publishType");
     var publishType = "0";
 
-    const validExtensions = [".apk", ".ipa"];
+    const validExtensions = [".apk", ".aab", ".ipa"];
     const fileExtension = appPath.slice(appPath.lastIndexOf(".")).toLowerCase();
     if (!validExtensions.includes(fileExtension)) {
       tl.setResult(
         tl.TaskResult.Failed,
-        `Invalid file extension: ${appPath}. For Android, use .apk. For iOS, use .ipa.`
+        `Invalid file extension: ${appPath}. For Android, use .apk or .aab. For iOS, use .ipa.`
       );
       return;
     }
@@ -48,12 +50,18 @@ async function run() {
         break;
     }
 
-    const loginResponse = await getToken(personalAPIToken);
+    // Create Appcircle API instance
+    const apiEndpointUrl = new URL(apiEndpoint).toString();
+    const appcircleApi = axios.create({
+      baseURL: apiEndpointUrl,
+    });
+
+    const loginResponse = await getToken(personalAPIToken, authEndpoint);
     UploadServiceHeaders.token = loginResponse.access_token;
     console.log("Logged in to Appcircle successfully");
 
-    const uploadResponse = await uploadEnterpriseApp(appPath);
-    const status = await checkTaskStatus(uploadResponse.taskId);
+    const uploadResponse = await uploadEnterpriseApp(appcircleApi, appPath);
+    const status = await checkTaskStatus(appcircleApi, uploadResponse.taskId);
 
     if (!status) {
       tl.setResult(
@@ -64,18 +72,22 @@ async function run() {
     }
 
     if (publishType !== "0") {
-      const profileId = await getProfileId();
-      const appVersions = await getEnterpriseAppVersions({
-        entProfileId: profileId,
-      });
+      const profileId = await getProfileId(appcircleApi);
+      const appVersions = await getEnterpriseAppVersions(
+        appcircleApi,
+        {
+          entProfileId: profileId,
+        });
       const entVersionId = appVersions[0].id;
-      await publishEnterpriseAppVersion({
-        entProfileId: profileId,
-        entVersionId: entVersionId,
-        summary,
-        releaseNotes,
-        publishType,
-      });
+      await publishEnterpriseAppVersion(
+        appcircleApi,
+        {
+          entProfileId: profileId,
+          entVersionId: entVersionId,
+          summary,
+          releaseNotes,
+          publishType,
+        });
     }
 
     console.log(
@@ -95,13 +107,14 @@ run();
 
 /* API */
 
-export async function getToken(pat: string): Promise<any> {
+export async function getToken(pat: string, authEndpoint: string): Promise<any> {
   const params = new URLSearchParams();
   params.append("pat", pat);
 
   try {
+    const url = new URL('/auth/v1/token', authEndpoint).toString();
     const response = await axios.post(
-      "https://auth.appcircle.io/auth/v1/token",
+      url,
       params.toString(),
       {
         headers: {
@@ -141,22 +154,18 @@ export class UploadServiceHeaders {
   };
 }
 
-const API_HOSTNAME = "https://api.appcircle.io";
-export const appcircleApi = axios.create({
-  baseURL: API_HOSTNAME.endsWith("/") ? API_HOSTNAME : `${API_HOSTNAME}/`,
-});
-export async function getEnterpriseProfiles() {
-  const buildProfiles = await appcircleApi.get(`store/v2/profiles`, {
+export async function getEnterpriseProfiles(api: AxiosInstance) {
+  const buildProfiles = await api.get(`store/v2/profiles`, {
     headers: UploadServiceHeaders.getHeaders(),
   });
   return buildProfiles.data;
 }
 
-export async function uploadEnterpriseApp(app: string) {
+export async function uploadEnterpriseApp(api: AxiosInstance, app: string) {
   // @ts-ignore
   const data = new FormData();
   data.append("File", fs.createReadStream(app));
-  const uploadResponse = await appcircleApi.post(
+  const uploadResponse = await api.post(
     `store/v2/profiles/app-versions`,
     data,
     {
@@ -172,14 +181,16 @@ export async function uploadEnterpriseApp(app: string) {
   return uploadResponse.data;
 }
 
-export async function publishEnterpriseAppVersion(options: {
-  entProfileId: string;
-  entVersionId: string;
-  summary: string;
-  releaseNotes: string;
-  publishType: string;
-}) {
-  const versionResponse = await appcircleApi.patch(
+export async function publishEnterpriseAppVersion(
+  api: AxiosInstance,
+  options: {
+    entProfileId: string;
+    entVersionId: string;
+    summary: string;
+    releaseNotes: string;
+    publishType: string;
+  }) {
+  const versionResponse = await api.patch(
     `store/v2/profiles/${options.entProfileId}/app-versions/${options.entVersionId}?action=publish`,
     {
       summary: options.summary,
@@ -193,8 +204,8 @@ export async function publishEnterpriseAppVersion(options: {
   return versionResponse.data;
 }
 
-export async function getProfileId() {
-  const profiles = await getEnterpriseProfiles().then((res) =>
+export async function getProfileId(api: AxiosInstance) {
+  const profiles = await getEnterpriseProfiles(api).then((res) =>
     res.sort((a: any, b: any) => {
       return (
         new Date(b.lastBinaryReceivedDate).getTime() -
@@ -206,14 +217,14 @@ export async function getProfileId() {
   return profiles[0].id;
 }
 
-export async function checkTaskStatus(taskId: string, currentAttempt = 0) {
-  const response = await appcircleApi.get(`/task/v1/tasks/${taskId}`, {
+export async function checkTaskStatus(api: AxiosInstance, taskId: string, currentAttempt = 0) {
+  const response = await api.get(`/task/v1/tasks/${taskId}`, {
     headers: UploadServiceHeaders.getHeaders(),
   });
 
   if (response?.data.stateValue == 1 && currentAttempt < 100) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    return checkTaskStatus(taskId, currentAttempt + 1);
+    return checkTaskStatus(api, taskId, currentAttempt + 1);
   }
 
   if (response.data.stateValue === 2) {
@@ -223,10 +234,12 @@ export async function checkTaskStatus(taskId: string, currentAttempt = 0) {
   return true;
 }
 
-export async function getEnterpriseAppVersions(options: {
-  entProfileId: string;
-  publishType?: string;
-}) {
+export async function getEnterpriseAppVersions(
+  api: AxiosInstance,
+  options: {
+    entProfileId: string;
+    publishType?: string;
+  }) {
   let versionType = "";
   switch (options?.publishType) {
     case "1":
@@ -238,7 +251,7 @@ export async function getEnterpriseAppVersions(options: {
       break;
   }
 
-  const profileResponse = await appcircleApi.get(
+  const profileResponse = await api.get(
     `store/v2/profiles/${options.entProfileId}/app-versions${versionType}`,
     {
       headers: UploadServiceHeaders.getHeaders(),
