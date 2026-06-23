@@ -2,6 +2,7 @@ import * as tl from "azure-pipelines-task-lib/task";
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import * as fs from "fs";
 import * as FormData from "form-data";
+import * as path from "path";
 
 async function run() {
   try {
@@ -161,24 +162,102 @@ export async function getEnterpriseProfiles(api: AxiosInstance) {
   return buildProfiles.data;
 }
 
+async function uploadWithRetry(doUpload: () => Promise<any>, maxRetries = 5): Promise<any> {
+  let attempt = 0;
+  let delay = 1000;
+  while (true) {
+    try {
+      return await doUpload();
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const retryable =
+        status === 503 ||
+        error?.code === "ECONNRESET" ||
+        (typeof error?.message === "string" && error.message.includes("socket hang up"));
+      if (!retryable || attempt >= maxRetries) {
+        throw error;
+      }
+      attempt++;
+      const jitter = Math.floor(Math.random() * 300);
+      await new Promise((resolve) => setTimeout(resolve, delay + jitter));
+      delay *= 2;
+    }
+  }
+}
+
 export async function uploadEnterpriseApp(api: AxiosInstance, app: string) {
-  // @ts-ignore
-  const data = new FormData();
-  data.append("File", fs.createReadStream(app));
-  const uploadResponse = await api.post(
-    `store/v2/profiles/app-versions`,
-    data,
+  const filePath = app;
+  const fileName = path.basename(filePath);
+  const fileSize = fs.statSync(filePath).size;
+
+  // Step 1: Get upload information (size-validated, returns the upload method)
+  console.log("Getting file upload information...");
+  const uploadInfoResponse = await api.get<{
+    fileId: string;
+    uploadUrl: string;
+    configuration: {
+      httpMethod: string;
+      signParameters: Record<string, string>;
+    };
+  }>(`store/v1/profiles/app-versions`, {
+    params: {
+      action: "uploadInformation",
+      fileName: fileName,
+      fileSize: fileSize,
+    },
+    headers: UploadServiceHeaders.getHeaders(),
+  });
+  const { fileId, uploadUrl, configuration } = uploadInfoResponse.data;
+  const { httpMethod, signParameters } = configuration;
+
+  // Step 2: Upload the binary to object storage (PUT, or POST multipart for MinIO)
+  console.log("Uploading file to Appcircle...");
+  if (httpMethod.toUpperCase() === "POST") {
+    await uploadWithRetry(() => {
+      // @ts-ignore
+      const data = new FormData();
+      for (const [key, value] of Object.entries(signParameters)) {
+        data.append(key, value);
+      }
+      data.append("file", fs.createReadStream(filePath), fileName);
+      return axios.post(uploadUrl, data, {
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        headers: {
+          ...data.getHeaders(),
+        },
+      });
+    });
+  } else if (httpMethod.toUpperCase() === "PUT") {
+    await uploadWithRetry(() =>
+      axios.put(uploadUrl, fs.readFileSync(filePath), {
+        headers: {
+          "Content-Type": "application/octet-stream",
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+      })
+    );
+  } else {
+    throw new Error(`Unsupported upload HTTP method: ${httpMethod}`);
+  }
+
+  // Step 3: Commit. createNewProfile=true lets the server route the binary to its
+  // profile by package (matching an existing one, or creating it if none exists),
+  // preserving the previous auto-routing behavior.
+  console.log("Committing file upload...");
+  const commitResponse = await api.post<{ taskId: string }>(
+    `store/v1/profiles/app-versions`,
     {
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      headers: {
-        ...UploadServiceHeaders.getHeaders(),
-        ...data.getHeaders(),
-        "Content-Type": "multipart/form-data;boundary=" + data.getBoundary(),
-      },
+      fileId: fileId,
+      fileName: fileName,
+    },
+    {
+      params: { action: "commitFileUpload", createNewProfile: true },
+      headers: UploadServiceHeaders.getHeaders(),
     }
   );
-  return uploadResponse.data;
+  return commitResponse.data;
 }
 
 export async function publishEnterpriseAppVersion(
