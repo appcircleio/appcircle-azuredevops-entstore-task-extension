@@ -1,54 +1,64 @@
 #!/bin/env bash
-
 # shellcheck shell=bash
 set -euo pipefail
 
-echo "Publish Token: $(echo "$PUBLISH_TOKEN" | cut -c1-3)...***"
+# Release pipeline for the Appcircle Enterprise App Store Azure DevOps extension.
+#
+# Policy (aligned with the other Appcircle plugins, adapted to the Visual Studio
+# Marketplace, which does NOT support pre-release/beta versions):
+#   * Only a push/merge to the default branch (main) publishes a PRODUCTION version.
+#   * There is no beta channel.
+#   * The version is derived from the latest git tag (vX.Y.Z) — tagging is manual.
+
+if [ -n "${PUBLISH_TOKEN:-}" ]; then
+    echo "Publish token configured: yes"
+else
+    echo "Publish token configured: no"
+fi
+
+# --- Only main publishes. No beta. ------------------------------------------
+if [ "${BRANCH_NAME:-}" != "main" ]; then
+    echo "Branch '${BRANCH_NAME:-unknown}' is not 'main' — nothing to publish."
+    exit 0
+fi
 
 echo "=== Runtime Dependencies ==="
-echo
-echo "npm: $(npm -v)"
-echo "node: $(node -v)"
-echo "yarn: $(yarn -v)"
-if command -v tsc &>/dev/null; then
-    echo "tsc: OK"
-    npm ls -g | grep typescript
-fi
-if command -v tfx &>/dev/null; then
-    echo "tfx: OK"
-    npm ls -g | grep tfx-cli
-fi
-echo
+node -v
+yarn -v
+command -v tfx >/dev/null 2>&1 && echo "tfx: OK"
 
-echo "=== Update Dependencies ==="
-echo
-yarn install
-cd task/
-yarn install
-cd ..
-echo
-
-echo "=== Build Package ==="
-echo
-yarn package
-
-echo "=== Create Extension ==="
-echo
-if [ "$BRANCH_NAME" == "main" ]; then
-    configuration="configs/release.json"
-elif [[ "$BRANCH_NAME" =~ ^release.* ]]; then
-    configuration="configs/dev.json"
-else
-    echo "Branch $BRANCH_NAME is not configured for release."
+# --- Version source of truth = latest git tag (manual tagging) --------------
+git fetch --tags --force
+LATEST_TAG="$(git tag --list --sort=-version:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
+VERSION="${LATEST_TAG#v}"
+if [ -z "$VERSION" ] || ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "ERROR: no clean vX.Y.Z git tag found (latest: '${LATEST_TAG:-<none>}')." >&2
     exit 1
 fi
-echo "Configuration: $configuration"
-tfx extension create --manifest-globs vss-extension.json --overrides-file $configuration
-echo
+echo "Publishing version: $VERSION (from tag ${LATEST_TAG})"
 
-echo "=== Publish Extension ==="
-echo
-tfx extension publish --manifest-globs vss-extension.json --overrides-file $configuration --token "$PUBLISH_TOKEN"
-echo
+echo "=== Install Dependencies ==="
+yarn install
+(cd task && yarn install)
+
+# --- Inject the git-tag version into the manifests --------------------------
+node -e '
+const fs = require("fs");
+const v = process.argv[1].split(".");
+const task = JSON.parse(fs.readFileSync("task/task.json"));
+task.version = { Major: +v[0], Minor: +v[1], Patch: +v[2] };
+fs.writeFileSync("task/task.json", JSON.stringify(task, null, 2) + "\n");
+const ext = JSON.parse(fs.readFileSync("vss-extension.json"));
+ext.version = process.argv[1];
+fs.writeFileSync("vss-extension.json", JSON.stringify(ext, null, 2) + "\n");
+console.log("Manifests set to " + process.argv[1]);
+' "$VERSION"
+
+echo "=== Build Package ==="
+yarn package
+
+echo "=== Create & Publish Extension (public production) ==="
+tfx extension create --manifest-globs vss-extension.json --overrides-file configs/release.json
+tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/release.json --token "$PUBLISH_TOKEN"
 
 exit 0
