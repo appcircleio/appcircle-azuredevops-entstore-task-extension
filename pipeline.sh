@@ -34,7 +34,7 @@ echo "Publishing version: $VERSION (from tag ${LATEST_TAG})"
 
 # --- Build + publish inside a node container --------------------------------
 # (agent has Docker but no Node/yarn/tfx; tsc/tfx are installed globally here)
-docker run --rm \
+docker run --rm -i \
     -v "$PWD":/work -w /work \
     -e VERSION="$VERSION" \
     -e PUBLISH_TOKEN="$PUBLISH_TOKEN" \
