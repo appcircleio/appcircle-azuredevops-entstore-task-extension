@@ -10,7 +10,11 @@ set -euo pipefail
 #   * There is no beta channel.
 #   * The version is derived from the latest git tag (vX.Y.Z) — tagging is manual.
 
-echo "Publish Token: $(echo "${PUBLISH_TOKEN:-}" | cut -c1-3)...***"
+if [ -n "${PUBLISH_TOKEN:-}" ]; then
+    echo "Publish token configured: yes"
+else
+    echo "Publish token configured: no"
+fi
 
 # --- Only main publishes. No beta. ------------------------------------------
 if [ "${BRANCH_NAME:-}" != "main" ]; then
@@ -24,11 +28,11 @@ yarn -v
 command -v tfx >/dev/null 2>&1 && echo "tfx: OK"
 
 # --- Version source of truth = latest git tag (manual tagging) --------------
-git fetch --tags --force || true
-LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+git fetch --tags --force
+LATEST_TAG="$(git tag --list --sort=-version:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
 VERSION="${LATEST_TAG#v}"
-if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    echo "ERROR: latest git tag '${LATEST_TAG:-<none>}' is not a clean vX.Y.Z." >&2
+if [ -z "$VERSION" ] || ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "ERROR: no clean vX.Y.Z git tag found (latest: '${LATEST_TAG:-<none>}')." >&2
     exit 1
 fi
 echo "Publishing version: $VERSION (from tag ${LATEST_TAG})"

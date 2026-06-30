@@ -162,6 +162,9 @@ export async function getEnterpriseProfiles(api: AxiosInstance) {
   return buildProfiles.data;
 }
 
+const RETRYABLE_UPLOAD_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const RETRYABLE_UPLOAD_CODES = new Set(["ECONNRESET", "ECONNABORTED", "ETIMEDOUT", "EAI_AGAIN"]);
+
 async function uploadWithRetry(doUpload: () => Promise<any>, maxRetries = 5): Promise<any> {
   let attempt = 0;
   let delay = 1000;
@@ -170,10 +173,11 @@ async function uploadWithRetry(doUpload: () => Promise<any>, maxRetries = 5): Pr
       return await doUpload();
     } catch (error: any) {
       const status = error?.response?.status;
+      const message = typeof error?.message === "string" ? error.message.toLowerCase() : "";
       const retryable =
-        status === 503 ||
-        error?.code === "ECONNRESET" ||
-        (typeof error?.message === "string" && error.message.includes("socket hang up"));
+        (typeof status === "number" && RETRYABLE_UPLOAD_STATUSES.has(status)) ||
+        (typeof error?.code === "string" && RETRYABLE_UPLOAD_CODES.has(error.code)) ||
+        message.includes("socket hang up");
       if (!retryable || attempt >= maxRetries) {
         throw error;
       }
