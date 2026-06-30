@@ -22,11 +22,6 @@ if [ "${BRANCH_NAME:-}" != "main" ]; then
     exit 0
 fi
 
-echo "=== Runtime Dependencies ==="
-node -v
-yarn -v
-command -v tfx >/dev/null 2>&1 && echo "tfx: OK"
-
 # --- Version source of truth = latest git tag (manual tagging) --------------
 git fetch --tags --force
 LATEST_TAG="$(git tag --list --sort=-version:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
@@ -37,22 +32,38 @@ if [ -z "$VERSION" ] || ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$';
 fi
 echo "Publishing version: $VERSION (from tag ${LATEST_TAG})"
 
+# --- Build + publish inside a node container --------------------------------
+# (agent has Docker but no Node/yarn/tfx; tsc/tfx are installed globally here)
+docker run --rm \
+    -v "$PWD":/work -w /work \
+    -e VERSION="$VERSION" \
+    -e PUBLISH_TOKEN="$PUBLISH_TOKEN" \
+    node:18 bash -s <<'DOCKER'
+set -euo pipefail
+
+echo "=== Runtime Dependencies ==="
+node -v
+yarn -v
+npm install -g typescript@5 tfx-cli >/dev/null 2>&1
+tfx version
+
 echo "=== Install Dependencies ==="
 yarn install
 (cd task && yarn install)
 
 # --- Inject the git-tag version into the manifests --------------------------
+echo "=== Set manifest version ==="
 node -e '
 const fs = require("fs");
-const v = process.argv[1].split(".");
+const v = process.env.VERSION.split(".");
 const task = JSON.parse(fs.readFileSync("task/task.json"));
 task.version = { Major: +v[0], Minor: +v[1], Patch: +v[2] };
 fs.writeFileSync("task/task.json", JSON.stringify(task, null, 2) + "\n");
 const ext = JSON.parse(fs.readFileSync("vss-extension.json"));
-ext.version = process.argv[1];
+ext.version = process.env.VERSION;
 fs.writeFileSync("vss-extension.json", JSON.stringify(ext, null, 2) + "\n");
-console.log("Manifests set to " + process.argv[1]);
-' "$VERSION"
+console.log("Manifests set to " + process.env.VERSION);
+'
 
 echo "=== Build Package ==="
 yarn package
@@ -60,5 +71,6 @@ yarn package
 echo "=== Create & Publish Extension (public production) ==="
 tfx extension create --manifest-globs vss-extension.json --overrides-file configs/release.json
 tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/release.json --token "$PUBLISH_TOKEN"
+DOCKER
 
 exit 0
