@@ -17,7 +17,7 @@
     "IPA",
     "APK/AAB"
   ],
-  "description": "Appcircle Enterprise Mobile App Store is your own mobile app store for providing access to in-house apps with a customizable mobile storefront.",
+  "description": "Appcircle Enterprise App Store is your own mobile app store for providing access to in-house apps with a customizable mobile storefront.",
   "categories": ["Azure Pipelines"],
   "icons": {
     "default": "images/extension-icon.png"
