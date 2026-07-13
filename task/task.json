@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 2,
-    "Patch": 0
+    "Patch": 1
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
@@ -38,6 +38,14 @@
       "defaultValue": "https://api.appcircle.io",
       "required": false,
       "helpMarkDown": "Specify the API endpoint URL for self-hosted Appcircle installations. Default is the cloud endpoint: https://api.appcircle.io"
+    },
+    {
+      "name": "subOrganizationName",
+      "type": "string",
+      "label": "Sub-Organization Name",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Optional. Sub-organization name for the enterprise store profile. Leave empty to use the root organization."
     },
     {
       "name": "appPath",
