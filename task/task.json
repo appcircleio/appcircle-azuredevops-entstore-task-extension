@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 2,
-    "Patch": 1
+    "Patch": 2
   },
   "visibility": ["Build", "Release"],
   "instanceNameFormat": "Appcircle Enterprise Store",
@@ -85,6 +85,9 @@
     }
   ],
   "execution": {
+    "Node16": {
+      "target": "index.js"
+    },
     "Node20_1": {
       "target": "index.js"
     }
