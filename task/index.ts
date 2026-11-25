@@ -15,6 +15,7 @@ async function run() {
     const personalAPIToken = tl.getInputRequired("personalAPIToken");
     const authEndpoint = tl.getInput("authEndpoint") ?? "https://auth.appcircle.io";
     const apiEndpoint = tl.getInput("apiEndpoint") ?? "https://api.appcircle.io";
+    validateEndpoints(authEndpoint, apiEndpoint);
     const appPath = tl.getInputRequired("appPath");
     const summary = tl.getInputRequired("summary");
     const releaseNotes = tl.getInputRequired("releaseNotes");
@@ -407,4 +408,17 @@ export async function getEnterpriseAppVersions(
     }
   );
   return profileResponse.data;
+}
+
+function isCloudEndpoint(endpoint: string | undefined, cloudEndpoint: string): boolean {
+  const value = (endpoint ?? "").trim().replace(/\/+$/, "");
+  return value === "" || value.toLowerCase() === cloudEndpoint;
+}
+
+export function validateEndpoints(authEndpoint: string | undefined, apiEndpoint: string | undefined): void {
+  if (isCloudEndpoint(authEndpoint, "https://auth.appcircle.io") !== isCloudEndpoint(apiEndpoint, "https://api.appcircle.io")) {
+    throw new Error(
+      "Set both authEndpoint and apiEndpoint for a self-hosted Appcircle server, or leave both empty for the Appcircle cloud."
+    );
+  }
 }

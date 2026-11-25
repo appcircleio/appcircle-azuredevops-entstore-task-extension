@@ -48,6 +48,7 @@ These features make the Appcircle Enterprise App Store a powerful tool for secur
 - `personalAPIToken`: The Appcircle Personal API token used to authenticate and authorize access to Appcircle services within this extension.
 - `authEndpoint` (optional): Authentication endpoint URL for self-hosted Appcircle installations. Defaults to `https://auth.appcircle.io`.
 - `apiEndpoint` (optional): API endpoint URL for self-hosted Appcircle installations. Defaults to `https://api.appcircle.io`.
+- Set `authEndpoint` and `apiEndpoint` together. If you set only one of them, the task stops before it sends a request, so a self-hosted token never goes to the Appcircle cloud.
 - `subOrganizationName` (optional): Sub-organization name for the enterprise store. Leave empty to use the root organization. Use this when your Personal API Token belongs to the root organization but the target enterprise store lives in a sub-organization.
 
 > **Self-signed or private CA certificates:** If your self-hosted Appcircle server uses a self-signed certificate (or one issued by a private/internal CA), requests will fail certificate validation. The task does not disable TLS verification. Trust the server's CA on the build agent: set the `NODE_EXTRA_CA_CERTS` environment variable to a PEM file containing the CA certificate, or add the CA to the system certificate store.
